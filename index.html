@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Rasto Vivo</title>
+        <link rel="stylesheet" href="style.css" />
+    </head>
+    <body>
+        <main class="app">
+            <header class="topo">
+                <h1>Rasto Vivo</h1>
+                <p>
+                    Obra digital interativa inspirada no Expressionismo Abstrato.
+                    Move o rato pelo ecrã e cria uma composição única.
+                </p>
+            </header>
+
+            <section class="painel">
+                <div class="painel-linha acoes">
+                    <button id="clearBtn">Limpar</button>
+                    <button id="saveBtn">Guardar imagem</button>
+                </div>
+
+                <div class="painel-linha controlos">
+                    <select id="paletteSelect">
+                        <option value="warm">Paleta quente</option>
+                        <option value="cold">Paleta fria</option>
+                        <option value="mono">Monocromática</option>
+                        <option value="neon">Neon</option>
+                    </select>
+
+                    <select id="shapeSelect">
+                        <option value="circle">Círculo</option>
+                        <option value="square">Quadrado</option>
+                        <option value="line">Linha</option>
+                        <option value="spray">Spray</option>
+                    </select>
+
+                    <div class="control-group">
+                        <label for="sizeRange">Espessura</label>
+                        <input type="range" id="sizeRange" min="4" max="30" value="18" />
+                    </div>
+
+                    <div class="control-group">
+                        <label for="densityRange">Intensidade</label>
+                        <input type="range" id="densityRange" min="3" max="20" value="6" />
+                    </div>
+                </div>
+            </section>
+
+            <section class="tela-wrap">
+                <canvas id="artCanvas" width="1000" height="600"></canvas>
+            </section>
+        </main>
+
+        <script src="script.js"></script>
+    </body>
+</html>
