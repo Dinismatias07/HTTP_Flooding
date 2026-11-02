@@ -1,59 +1,1060 @@
-<!DOCTYPE html>
-<html lang="pt">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Rasto Vivo</title>
-        <link rel="stylesheet" href="style.css" />
-    </head>
-    <body>
-        <main class="app">
-            <header class="topo">
-                <h1>Rasto Vivo</h1>
-                <p>
-                    Obra digital interativa inspirada no Expressionismo Abstrato.
-                    Move o rato pelo ecrã e cria uma composição única.
-                </p>
-            </header>
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light dark">
+  <title>Simulador Didático de HTTP Flooding</title>
+  <style>
+    :root {
+      --bg: #eef3f8;
+      --panel: #ffffff;
+      --panel-2: #f7f9fc;
+      --ink: #10233b;
+      --muted: #607187;
+      --line: #d7e0e9;
+      --blue: #1268a8;
+      --blue-soft: #e5f0f8;
+      --teal: #0c8797;
+      --teal-soft: #e3f3f4;
+      --good: #167a55;
+      --good-soft: #e2f2eb;
+      --warn: #b56c0d;
+      --warn-soft: #fff1d8;
+      --bad: #c7354d;
+      --bad-soft: #fde7eb;
+      --violet: #6e4fb3;
+      --violet-soft: #eee9f9;
+      --shadow: 0 12px 34px rgba(25, 55, 85, .09);
+      --radius: 18px;
+      --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    }
 
-            <section class="painel">
-                <div class="painel-linha acoes">
-                    <button id="clearBtn">Limpar</button>
-                    <button id="saveBtn">Guardar imagem</button>
-                </div>
+    :root[data-theme="dark"] {
+      --bg: #091827;
+      --panel: #10283f;
+      --panel-2: #0c2135;
+      --ink: #edf5fb;
+      --muted: #a2b7c8;
+      --line: #29445d;
+      --blue: #54aee8;
+      --blue-soft: #12354c;
+      --teal: #40c1cf;
+      --teal-soft: #123b42;
+      --good: #4bd19c;
+      --good-soft: #123a2e;
+      --warn: #f0b65e;
+      --warn-soft: #443117;
+      --bad: #ff7187;
+      --bad-soft: #4b1c26;
+      --violet: #b09bea;
+      --violet-soft: #30284c;
+      --shadow: 0 12px 34px rgba(0, 0, 0, .22);
+    }
 
-                <div class="painel-linha controlos">
-                    <select id="paletteSelect">
-                        <option value="warm">Paleta quente</option>
-                        <option value="cold">Paleta fria</option>
-                        <option value="mono">Monocromática</option>
-                        <option value="neon">Neon</option>
-                    </select>
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 8% 0%, color-mix(in srgb, var(--blue) 8%, transparent), transparent 26rem),
+        var(--bg);
+      color: var(--ink);
+      font-family: var(--font);
+      line-height: 1.45;
+    }
+    button, input, select { font: inherit; }
+    button { color: inherit; }
 
-                    <select id="shapeSelect">
-                        <option value="circle">Círculo</option>
-                        <option value="square">Quadrado</option>
-                        <option value="line">Linha</option>
-                        <option value="spray">Spray</option>
-                    </select>
+    .app {
+      width: min(1440px, 100%);
+      margin: 0 auto;
+      padding: 22px max(16px, env(safe-area-inset-right)) 44px max(16px, env(safe-area-inset-left));
+    }
 
-                    <div class="control-group">
-                        <label for="sizeRange">Espessura</label>
-                        <input type="range" id="sizeRange" min="4" max="30" value="18" />
-                    </div>
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .brand-mark {
+      width: 42px; height: 42px; border-radius: 13px;
+      display: grid; place-items: center;
+      background: linear-gradient(135deg, var(--blue), var(--teal));
+      color: white; font-weight: 800; letter-spacing: -.04em;
+      box-shadow: var(--shadow);
+    }
+    .brand small { display: block; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .12em; font-weight: 700; }
+    .brand strong { display: block; font-size: 15px; }
+    .top-actions { display: flex; gap: 8px; }
 
-                    <div class="control-group">
-                        <label for="densityRange">Intensidade</label>
-                        <input type="range" id="densityRange" min="3" max="20" value="6" />
-                    </div>
-                </div>
-            </section>
+    .icon-btn, .btn {
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: var(--panel);
+      padding: 9px 12px;
+      cursor: pointer;
+      transition: transform .15s ease, border-color .15s ease, background .15s ease;
+    }
+    .icon-btn:hover, .btn:hover { border-color: var(--blue); transform: translateY(-1px); }
+    .icon-btn:focus-visible, .btn:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--blue) 28%, transparent);
+      outline-offset: 2px;
+    }
 
-            <section class="tela-wrap">
-                <canvas id="artCanvas" width="1000" height="600"></canvas>
-            </section>
-        </main>
+    .hero {
+      display: grid;
+      grid-template-columns: 1.25fr .75fr;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+    .hero-main, .safety-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+    .hero-main { padding: 24px 26px; }
+    .eyebrow { margin: 0 0 7px; color: var(--teal); font-family: var(--mono); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .13em; }
+    h1 { margin: 0; font-size: clamp(28px, 4vw, 46px); letter-spacing: -.045em; line-height: 1.08; }
+    .lead { margin: 12px 0 0; color: var(--muted); max-width: 78ch; font-size: 15.5px; }
+    .hero-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 17px; }
+    .tag { border: 1px solid var(--line); background: var(--panel-2); border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 650; }
+    .safety-card { padding: 19px; display: flex; flex-direction: column; justify-content: center; }
+    .safety-card .lock { font-size: 25px; }
+    .safety-card strong { display: block; margin: 7px 0 4px; }
+    .safety-card p { margin: 0; color: var(--muted); font-size: 13px; }
 
-        <script src="script.js"></script>
-    </body>
+    .demo-strip {
+      display: grid;
+      grid-template-columns: auto repeat(5, minmax(0, 1fr)) auto;
+      gap: 8px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: var(--panel);
+      padding: 10px;
+      margin-bottom: 18px;
+      box-shadow: var(--shadow);
+    }
+    .demo-label { padding: 0 8px; font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-family: var(--mono); font-weight: 800; }
+    .scenario {
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      border-radius: 10px;
+      padding: 9px 10px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+    .scenario[aria-pressed="true"] { background: var(--blue); border-color: var(--blue); color: #fff; }
+    .auto-btn { background: linear-gradient(135deg, var(--blue), var(--teal)); color: white; border: 0; font-weight: 800; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 330px minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+    .panel, .viz-card, .metric, .explain-card, .chart-card, details {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    .panel { padding: 18px; position: sticky; top: 12px; }
+    .panel-title { margin: 0 0 14px; font-size: 12px; text-transform: uppercase; letter-spacing: .1em; font-family: var(--mono); color: var(--muted); }
+    .group { margin-bottom: 18px; }
+    .group:last-child { margin-bottom: 0; }
+    .label-row { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 7px; }
+    label, .group-label { font-size: 13px; font-weight: 750; }
+    .value { font: 750 12px var(--mono); color: var(--blue); }
+    .value.attack { color: var(--bad); }
+    .hint { margin: 5px 0 0; font-size: 11.5px; color: var(--muted); }
+    input[type="range"] { width: 100%; accent-color: var(--blue); }
+    input.attack-range { accent-color: var(--bad); }
+
+    .segmented { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; }
+    .segmented.three { grid-template-columns: repeat(3, 1fr); }
+    .seg-btn {
+      min-height: 40px;
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 750;
+      padding: 8px 6px;
+    }
+    .seg-btn[aria-pressed="true"] { color: white; background: var(--blue); border-color: var(--blue); }
+    .seg-btn.attack[aria-pressed="true"] { background: var(--bad); border-color: var(--bad); }
+    .seg-btn.good[aria-pressed="true"] { background: var(--good); border-color: var(--good); }
+
+    .control-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .control-actions .btn { font-weight: 750; background: var(--panel-2); }
+    .control-actions .primary { background: var(--blue); border-color: var(--blue); color: white; }
+
+    .content { min-width: 0; }
+    .viz-card { overflow: hidden; }
+    .viz-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+    .viz-head strong { font-size: 14px; }
+    .status {
+      display: inline-flex; align-items: center; gap: 8px;
+      border-radius: 999px; padding: 7px 11px;
+      font-size: 12px; font-weight: 800;
+      border: 1px solid var(--line);
+    }
+    .status .dot { width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
+    .status.ok { color: var(--good); background: var(--good-soft); }
+    .status.warn { color: var(--warn); background: var(--warn-soft); }
+    .status.crit { color: var(--bad); background: var(--bad-soft); }
+    canvas { display: block; width: 100%; }
+    #scene { min-height: 330px; }
+
+    .metrics { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }
+    .metric { padding: 13px; box-shadow: none; }
+    .metric .name { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: .07em; font-family: var(--mono); min-height: 30px; }
+    .metric .number { margin-top: 6px; font: 800 clamp(20px, 2.2vw, 28px) var(--mono); letter-spacing: -.04em; }
+    .metric .unit { color: var(--muted); font: 500 11px var(--font); margin-left: 3px; }
+    .metric.good { border-color: color-mix(in srgb, var(--good) 52%, var(--line)); }
+    .metric.good .number { color: var(--good); }
+    .metric.warn { border-color: color-mix(in srgb, var(--warn) 60%, var(--line)); }
+    .metric.warn .number { color: var(--warn); }
+    .metric.bad { border-color: color-mix(in srgb, var(--bad) 60%, var(--line)); }
+    .metric.bad .number { color: var(--bad); }
+
+    .lower-grid { display: grid; grid-template-columns: 1.3fr .7fr; gap: 14px; margin-top: 14px; }
+    .chart-card, .explain-card { padding: 16px; box-shadow: none; }
+    .card-title { margin: 0 0 10px; font-size: 13px; }
+    .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 8px; color: var(--muted); font-size: 11.5px; }
+    .legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .swatch { width: 18px; height: 4px; border-radius: 4px; }
+    .explain-card { display: flex; flex-direction: column; }
+    .insight {
+      border-left: 4px solid var(--blue);
+      background: var(--blue-soft);
+      border-radius: 10px;
+      padding: 12px 13px;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+    .insight strong { display: block; margin-bottom: 4px; }
+    .flow-steps { display: grid; gap: 7px; }
+    .flow-step { display: grid; grid-template-columns: 27px 1fr; gap: 9px; align-items: start; color: var(--muted); font-size: 12px; }
+    .flow-step b { color: var(--ink); }
+    .step-n { width: 27px; height: 27px; border-radius: 8px; display: grid; place-items: center; background: var(--panel-2); border: 1px solid var(--line); font: 800 11px var(--mono); color: var(--blue); }
+
+    details { margin-top: 14px; padding: 0; overflow: hidden; box-shadow: none; }
+    summary { cursor: pointer; padding: 13px 16px; font-weight: 800; font-size: 13px; background: var(--panel-2); }
+    .details-body { padding: 14px 16px; color: var(--muted); font-size: 12.5px; }
+    .details-body ul { margin: 6px 0 0; padding-left: 19px; }
+    .details-body li { margin: 5px 0; }
+    .keyboard { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+    kbd { border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; padding: 3px 7px; background: var(--panel); font: 700 11px var(--mono); color: var(--ink); }
+
+    .auto-banner {
+      display: none;
+      position: fixed;
+      left: 50%; bottom: 18px; transform: translateX(-50%);
+      width: min(720px, calc(100% - 30px));
+      z-index: 10;
+      padding: 14px 16px;
+      background: color-mix(in srgb, var(--panel) 92%, transparent);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      box-shadow: 0 20px 55px rgba(0,0,0,.22);
+    }
+    .auto-banner.show { display: block; }
+    .auto-top { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+    .auto-banner strong { font-size: 13px; }
+    .auto-banner p { margin: 5px 0 9px; color: var(--muted); font-size: 12px; }
+    .progress { height: 5px; background: var(--line); border-radius: 999px; overflow: hidden; }
+    .progress > span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--blue), var(--teal)); }
+
+    .sr-only { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0,0,0,0) !important; white-space: nowrap !important; border: 0 !important; }
+
+    @media (max-width: 1100px) {
+      .metrics { grid-template-columns: repeat(3, 1fr); }
+      .lower-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; }
+      .layout { grid-template-columns: 1fr; }
+      .panel { position: static; }
+      .demo-strip { grid-template-columns: repeat(3, 1fr); }
+      .demo-label { grid-column: 1 / -1; }
+      .auto-btn { grid-column: span 2; }
+    }
+    @media (max-width: 600px) {
+      .app { padding-top: 12px; }
+      .topbar { align-items: flex-start; }
+      .brand small { display: none; }
+      .hero-main { padding: 19px; }
+      .demo-strip { grid-template-columns: 1fr 1fr; }
+      .auto-btn { grid-column: 1 / -1; }
+      .metrics { grid-template-columns: 1fr 1fr; }
+      .segmented.three { grid-template-columns: 1fr; }
+      #scene { min-height: 290px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+    }
+    @media print {
+      .top-actions, .panel, .demo-strip, .auto-banner { display: none !important; }
+      .layout, .hero, .lower-grid { display: block; }
+      .viz-card, .metric, .chart-card, .explain-card { break-inside: avoid; box-shadow: none; }
+      body { background: white; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-mark">H7</div>
+        <div><small>Segurança em Sistemas Informáticos</small><strong>Grupo D · HTTP Flooding</strong></div>
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn" id="pauseTop" type="button" title="Pausar ou retomar">⏸ Pausar</button>
+        <button class="icon-btn" id="theme" type="button" title="Alternar tema">◐ Tema</button>
+        <button class="icon-btn" id="fullscreen" type="button" title="Ecrã inteiro">⛶ Ecrã inteiro</button>
+      </div>
+    </div>
+
+    <section class="hero">
+      <div class="hero-main">
+        <p class="eyebrow">Simulação local e segura · Camada 7 do modelo OSI</p>
+        <h1>Como um HTTP Flooding retira capacidade a um serviço Web</h1>
+        <p class="lead">Manipula o tráfego legítimo, o ritmo do atacante, o tipo de pedido e as defesas. Observa a fila, o tempo de resposta e a disponibilidade dos utilizadores legítimos em tempo real.</p>
+        <div class="hero-tags">
+          <span class="tag">Sem pedidos reais</span>
+          <span class="tag">DoS e DDoS</span>
+          <span class="tag">GET e POST</span>
+          <span class="tag">Rate limiting, WAF e cache</span>
+        </div>
+      </div>
+      <aside class="safety-card">
+        <span class="lock" aria-hidden="true">🔒</span>
+        <strong>Modelo didático, não é uma ferramenta de ataque</strong>
+        <p>Todo o comportamento é calculado dentro desta página. O simulador não abre ligações de rede, não envia pedidos HTTP e funciona offline.</p>
+      </aside>
+    </section>
+
+    <nav class="demo-strip" aria-label="Cenários de demonstração">
+      <span class="demo-label">Cenários rápidos</span>
+      <button class="scenario" data-scenario="normal" aria-pressed="true">1 · Normal</button>
+      <button class="scenario" data-scenario="legitPeak" aria-pressed="false">2 · Pico legítimo</button>
+      <button class="scenario" data-scenario="dos" aria-pressed="false">3 · DoS</button>
+      <button class="scenario" data-scenario="ddos" aria-pressed="false">4 · DDoS</button>
+      <button class="scenario" data-scenario="defended" aria-pressed="false">5 · Mitigação</button>
+      <button class="scenario auto-btn" id="autoDemo">▶ Demonstração automática</button>
+    </nav>
+
+    <div class="layout">
+      <aside class="panel" aria-label="Painel de controlo">
+        <h2 class="panel-title">Controlos da simulação</h2>
+
+        <div class="group">
+          <div class="label-row"><label for="attack">Pedidos do atacante</label><span class="value attack"><span id="attackVal">0</span> pedidos/s</span></div>
+          <input class="attack-range" id="attack" type="range" min="0" max="500" step="5" value="0">
+          <p class="hint">Volume total de pedidos HTTP produzidos pelo atacante ou pela botnet.</p>
+        </div>
+
+        <div class="group">
+          <div class="label-row"><span class="group-label">Origem do ataque</span><span class="value attack" id="originLabel">1 origem</span></div>
+          <div class="segmented">
+            <button class="seg-btn attack mode-btn" data-mode="dos" aria-pressed="true">DoS</button>
+            <button class="seg-btn attack mode-btn" data-mode="ddos" aria-pressed="false">DDoS</button>
+          </div>
+          <div id="originsGroup" hidden style="margin-top:10px">
+            <div class="label-row"><label for="origins">Número de origens</label><span class="value attack"><span id="originsVal">12</span> bots</span></div>
+            <input class="attack-range" id="origins" type="range" min="2" max="40" step="1" value="12">
+          </div>
+        </div>
+
+        <div class="group">
+          <div class="label-row"><span class="group-label">Tipo de pedido malicioso</span><span class="value" id="costLabel">custo ×1,0</span></div>
+          <div class="segmented">
+            <button class="seg-btn req-btn" data-request="get" aria-pressed="true">GET</button>
+            <button class="seg-btn req-btn" data-request="post" aria-pressed="false">POST</button>
+          </div>
+          <p class="hint">Neste modelo, POST exige mais processamento por poder envolver validação e base de dados.</p>
+        </div>
+
+        <div class="group">
+          <div class="label-row"><label for="legit">Tráfego legítimo</label><span class="value"><span id="legitVal">18</span> pedidos/s</span></div>
+          <input id="legit" type="range" min="0" max="100" step="1" value="18">
+        </div>
+
+        <div class="group">
+          <div class="label-row"><label for="capacity">Capacidade base</label><span class="value"><span id="capacityVal">60</span> u/s</span></div>
+          <input id="capacity" type="range" min="20" max="180" step="5" value="60">
+          <p class="hint">Unidades de processamento disponíveis por segundo. Um GET custa 1 unidade; um POST custa mais.</p>
+        </div>
+
+        <div class="group">
+          <div class="label-row"><span class="group-label">Mitigação</span><span class="value" id="mitLabel">desligada</span></div>
+          <div class="segmented three">
+            <button class="seg-btn good mit-btn" data-mit="none" aria-pressed="true">Nenhuma</button>
+            <button class="seg-btn good mit-btn" data-mit="rate" aria-pressed="false">Rate limit</button>
+            <button class="seg-btn good mit-btn" data-mit="layered" aria-pressed="false">Em camadas</button>
+          </div>
+          <p class="hint">A defesa em camadas combina limitação por origem, WAF/gestão de bots e cache/CDN.</p>
+        </div>
+
+        <div class="control-actions">
+          <button class="btn primary" id="pause" type="button">⏸ Pausar</button>
+          <button class="btn" id="reset" type="button">↺ Reiniciar</button>
+        </div>
+      </aside>
+
+      <section class="content" aria-label="Resultados da simulação">
+        <div class="viz-card">
+          <div class="viz-head">
+            <strong>Fluxo de pedidos até à aplicação</strong>
+            <div id="status" class="status ok" role="status" aria-live="polite"><span class="dot"></span><span id="statusText">Serviço disponível</span></div>
+          </div>
+          <canvas id="scene" width="980" height="350" aria-label="Animação de utilizadores legítimos e tráfego malicioso a chegar ao serviço Web"></canvas>
+        </div>
+
+        <div class="metrics" aria-label="Métricas">
+          <article class="metric good" id="metricLoad"><div class="name">Carga do servidor</div><div class="number"><span id="loadVal">30</span><span class="unit">%</span></div></article>
+          <article class="metric good" id="metricQueue"><div class="name">Fila de processamento</div><div class="number"><span id="queueVal">0</span><span class="unit">%</span></div></article>
+          <article class="metric good" id="metricResponse"><div class="name">Tempo de resposta</div><div class="number"><span id="responseVal">0,08</span><span class="unit">s</span></div></article>
+          <article class="metric good" id="metricAvailability"><div class="name">Legítimos atendidos</div><div class="number"><span id="availabilityVal">100</span><span class="unit">%</span></div></article>
+          <article class="metric good" id="metricBlocked"><div class="name">Ataque bloqueado</div><div class="number"><span id="blockedVal">0</span><span class="unit">%</span></div></article>
+          <article class="metric good" id="metricDropped"><div class="name">Pedidos descartados</div><div class="number"><span id="droppedVal">0</span><span class="unit">/s</span></div></article>
+        </div>
+
+        <div class="lower-grid">
+          <article class="chart-card">
+            <h2 class="card-title">Evolução nos últimos 20 segundos</h2>
+            <canvas id="chart" width="760" height="240" aria-label="Gráfico do tempo de resposta e da fila ao longo do tempo"></canvas>
+            <div class="legend">
+              <span><i class="swatch" style="background:var(--good)"></i> Tempo de resposta</span>
+              <span><i class="swatch" style="background:var(--violet)"></i> Ocupação da fila</span>
+              <span><i class="swatch" style="background:var(--bad)"></i> Timeout de 2 segundos</span>
+            </div>
+          </article>
+
+          <article class="explain-card">
+            <h2 class="card-title">O que está a acontecer?</h2>
+            <div class="insight" id="insight"><strong>Funcionamento normal</strong><span>Os pedidos chegam abaixo da capacidade disponível. A fila mantém-se curta e a aplicação responde rapidamente.</span></div>
+            <div class="flow-steps">
+              <div class="flow-step"><span class="step-n">1</span><div><b>Entrada:</b> pedidos legítimos e maliciosos chegam ao perímetro.</div></div>
+              <div class="flow-step"><span class="step-n">2</span><div><b>Filtragem:</b> as defesas bloqueiam parte do tráfego, quando estão ativas.</div></div>
+              <div class="flow-step"><span class="step-n">3</span><div><b>Processamento:</b> o servidor, a aplicação e a base de dados consomem capacidade.</div></div>
+              <div class="flow-step"><span class="step-n">4</span><div><b>Resultado:</b> se a fila ultrapassar o tempo tolerado, os pedidos legítimos falham.</div></div>
+            </div>
+          </article>
+        </div>
+
+        <details>
+          <summary>Notas para a apresentação e limitações do modelo</summary>
+          <div class="details-body">
+            <p><strong>Demonstração sugerida:</strong> começa em Normal, passa para DDoS e termina em Mitigação. Isto permite mostrar causa, impacto e resposta em menos de dois minutos.</p>
+            <ul>
+              <li>O modelo representa a saturação de recursos da aplicação. Não reproduz uma infraestrutura real nem envia tráfego.</li>
+              <li>A capacidade é expressa em unidades de processamento para mostrar que pedidos diferentes podem ter custos diferentes.</li>
+              <li>O rate limiting é menos eficaz quando o ataque está distribuído por muitas origens.</li>
+              <li>Uma defesa real combina WAF, gestão de bots, CDN/cache, monitorização e capacidade adicional.</li>
+              <li>Os valores são ilustrativos e não correspondem a um limiar universal de ataque.</li>
+            </ul>
+            <div class="keyboard"><kbd>1</kbd> Normal <kbd>2</kbd> Pico legítimo <kbd>3</kbd> DoS <kbd>4</kbd> DDoS <kbd>5</kbd> Mitigação <kbd>Espaço</kbd> Pausa <kbd>F</kbd> Ecrã inteiro</div>
+          </div>
+        </details>
+      </section>
+    </div>
+  </main>
+
+  <div class="auto-banner" id="autoBanner" aria-live="polite">
+    <div class="auto-top"><strong id="autoTitle">Demonstração automática</strong><button class="icon-btn" id="autoStop" type="button">Parar</button></div>
+    <p id="autoText"></p>
+    <div class="progress"><span id="autoProgress"></span></div>
+  </div>
+
+  <div class="sr-only" id="liveRegion" aria-live="polite"></div>
+
+  <script>
+  (() => {
+    'use strict';
+
+    const $ = (id) => document.getElementById(id);
+    const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+    const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+    const fmt = (n, d = 0) => n.toLocaleString('pt-PT', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+    const state = {
+      attack: 0,
+      legit: 18,
+      capacity: 60,
+      mode: 'dos',
+      origins: 12,
+      request: 'get',
+      mitigation: 'none',
+      buffer: 520,
+      timeout: 2,
+      queueWork: 0,
+      legitQueueWork: 0,
+      response: 0.08,
+      availability: 1,
+      droppedRate: 0,
+      blockedRate: 0,
+      load: 0,
+      running: true,
+      history: [],
+      scenario: 'normal',
+      auto: false
+    };
+
+    const requestCost = () => state.request === 'post' ? 2.2 : 1;
+    const effectiveCapacity = () => state.capacity * (state.mitigation === 'layered' ? (state.request === 'get' ? 1.45 : 1.2) : 1);
+
+    function mitigationResult() {
+      const total = state.attack;
+      if (total <= 0 || state.mitigation === 'none') return { admitted: total, blocked: 0 };
+      const origins = state.mode === 'ddos' ? state.origins : 1;
+      const perOriginLimit = 16;
+      let admitted = Math.min(total, perOriginLimit * origins);
+      if (state.mitigation === 'layered') {
+        const botEfficiency = state.mode === 'dos' ? 0.90 : clamp(0.92 - origins * 0.003, 0.78, 0.90);
+        admitted *= (1 - botEfficiency);
+      }
+      return { admitted, blocked: Math.max(0, total - admitted) };
+    }
+
+    function resetDynamics() {
+      state.queueWork = 0;
+      state.legitQueueWork = 0;
+      state.response = 0.08;
+      state.availability = 1;
+      state.droppedRate = 0;
+      state.blockedRate = 0;
+      state.history = [];
+      packets.length = 0;
+    }
+
+    function syncControls() {
+      $('attack').value = state.attack; $('attackVal').textContent = fmt(state.attack);
+      $('legit').value = state.legit; $('legitVal').textContent = fmt(state.legit);
+      $('capacity').value = state.capacity; $('capacityVal').textContent = fmt(state.capacity);
+      $('origins').value = state.origins; $('originsVal').textContent = fmt(state.origins);
+      $('originsGroup').hidden = state.mode !== 'ddos';
+      $('originLabel').textContent = state.mode === 'dos' ? '1 origem' : `${state.origins} origens`;
+      $('costLabel').textContent = `custo ×${fmt(requestCost(), 1)}`;
+      $('mitLabel').textContent = state.mitigation === 'none' ? 'desligada' : state.mitigation === 'rate' ? 'rate limiting' : 'defesa em camadas';
+      $$('.mode-btn').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === state.mode));
+      $$('.req-btn').forEach(b => b.setAttribute('aria-pressed', b.dataset.request === state.request));
+      $$('.mit-btn').forEach(b => b.setAttribute('aria-pressed', b.dataset.mit === state.mitigation));
+      $$('.scenario').filter(b => b.dataset.scenario).forEach(b => b.setAttribute('aria-pressed', b.dataset.scenario === state.scenario));
+      const pauseText = state.running ? '⏸ Pausar' : '▶ Retomar';
+      $('pause').textContent = pauseText;
+      $('pauseTop').textContent = pauseText;
+    }
+
+    function setScenario(name, announce = true) {
+      state.scenario = name;
+      switch (name) {
+        case 'normal':
+          Object.assign(state, { attack: 0, legit: 18, capacity: 60, mode: 'dos', origins: 12, request: 'get', mitigation: 'none' });
+          break;
+        case 'legitPeak':
+          Object.assign(state, { attack: 0, legit: 78, capacity: 85, mode: 'dos', origins: 12, request: 'get', mitigation: 'none' });
+          break;
+        case 'dos':
+          Object.assign(state, { attack: 170, legit: 18, capacity: 60, mode: 'dos', origins: 12, request: 'post', mitigation: 'none' });
+          break;
+        case 'ddos':
+          Object.assign(state, { attack: 360, legit: 18, capacity: 60, mode: 'ddos', origins: 24, request: 'get', mitigation: 'rate' });
+          break;
+        case 'defended':
+          Object.assign(state, { attack: 360, legit: 18, capacity: 60, mode: 'ddos', origins: 24, request: 'get', mitigation: 'layered' });
+          break;
+      }
+      resetDynamics();
+      syncControls();
+      if (announce) $('liveRegion').textContent = `Cenário ${name} ativado.`;
+    }
+
+    function markCustom() {
+      state.scenario = 'custom';
+      $$('.scenario').filter(b => b.dataset.scenario).forEach(b => b.setAttribute('aria-pressed', 'false'));
+    }
+
+    function bindRange(id, key, valId) {
+      $(id).addEventListener('input', (e) => {
+        state[key] = Number(e.target.value);
+        $(valId).textContent = fmt(state[key]);
+        if (key === 'origins') $('originLabel').textContent = `${state.origins} origens`;
+        markCustom();
+      });
+    }
+    bindRange('attack', 'attack', 'attackVal');
+    bindRange('legit', 'legit', 'legitVal');
+    bindRange('capacity', 'capacity', 'capacityVal');
+    bindRange('origins', 'origins', 'originsVal');
+
+    $$('.mode-btn').forEach(btn => btn.addEventListener('click', () => {
+      state.mode = btn.dataset.mode;
+      $('originsGroup').hidden = state.mode !== 'ddos';
+      $('originLabel').textContent = state.mode === 'dos' ? '1 origem' : `${state.origins} origens`;
+      $$('.mode-btn').forEach(b => b.setAttribute('aria-pressed', b === btn));
+      markCustom();
+    }));
+    $$('.req-btn').forEach(btn => btn.addEventListener('click', () => {
+      state.request = btn.dataset.request;
+      $('costLabel').textContent = `custo ×${fmt(requestCost(), 1)}`;
+      $$('.req-btn').forEach(b => b.setAttribute('aria-pressed', b === btn));
+      markCustom();
+    }));
+    $$('.mit-btn').forEach(btn => btn.addEventListener('click', () => {
+      state.mitigation = btn.dataset.mit;
+      $('mitLabel').textContent = state.mitigation === 'none' ? 'desligada' : state.mitigation === 'rate' ? 'rate limiting' : 'defesa em camadas';
+      $$('.mit-btn').forEach(b => b.setAttribute('aria-pressed', b === btn));
+      markCustom();
+    }));
+    $$('.scenario').filter(b => b.dataset.scenario).forEach(btn => btn.addEventListener('click', () => setScenario(btn.dataset.scenario)));
+
+    function togglePause() {
+      state.running = !state.running;
+      syncControls();
+      $('liveRegion').textContent = state.running ? 'Simulação retomada.' : 'Simulação pausada.';
+    }
+    $('pause').addEventListener('click', togglePause);
+    $('pauseTop').addEventListener('click', togglePause);
+    $('reset').addEventListener('click', () => setScenario('normal'));
+
+    $('theme').addEventListener('click', () => {
+      const dark = document.documentElement.dataset.theme === 'dark';
+      document.documentElement.dataset.theme = dark ? 'light' : 'dark';
+      try { localStorage.setItem('httpFloodTheme', dark ? 'light' : 'dark'); } catch (_) {}
+    });
+    let storedTheme = null;
+    try { storedTheme = localStorage.getItem('httpFloodTheme'); } catch (_) {}
+    if (storedTheme) document.documentElement.dataset.theme = storedTheme;
+
+    $('fullscreen').addEventListener('click', async () => {
+      try {
+        if (!document.fullscreenElement) await document.documentElement.requestFullscreen();
+        else await document.exitFullscreen();
+      } catch (_) { /* unsupported */ }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+      if (e.key === ' ') { e.preventDefault(); togglePause(); }
+      if (e.key.toLowerCase() === 'f') $('fullscreen').click();
+      const map = { '1': 'normal', '2': 'legitPeak', '3': 'dos', '4': 'ddos', '5': 'defended' };
+      if (map[e.key]) setScenario(map[e.key]);
+    });
+
+    // Simulation model
+    const STEP = 0.05;
+    let lastTime = performance.now();
+    let accumulator = 0;
+    let sampleAccumulator = 0;
+
+    function tick(dt) {
+      const cost = requestCost();
+      const cap = effectiveCapacity();
+      const mit = mitigationResult();
+      const legitWorkRate = state.legit;
+      const attackWorkRate = mit.admitted * cost;
+      const incomingWorkRate = legitWorkRate + attackWorkRate;
+      state.blockedRate = state.attack > 0 ? mit.blocked / state.attack : 0;
+
+      const incomingWork = incomingWorkRate * dt;
+      const freeWork = Math.max(0, state.buffer - state.queueWork);
+      const acceptedFraction = incomingWork > 0 ? Math.min(1, freeWork / incomingWork) : 1;
+      const acceptedWork = incomingWork * acceptedFraction;
+      const acceptedLegitWork = legitWorkRate * dt * acceptedFraction;
+      state.queueWork += acceptedWork;
+      state.legitQueueWork += acceptedLegitWork;
+
+      const processedWork = Math.min(state.queueWork, cap * dt);
+      const legitShare = state.queueWork > 0 ? state.legitQueueWork / state.queueWork : 0;
+      state.queueWork = Math.max(0, state.queueWork - processedWork);
+      state.legitQueueWork = Math.max(0, state.legitQueueWork - processedWork * legitShare);
+
+      const wait = cap > 0 ? state.queueWork / cap : 99;
+      const base = state.request === 'post' ? 0.13 : 0.08;
+      const response = base + wait;
+      const timely = response <= state.timeout ? 1 : Math.max(0, 1 - (response - state.timeout) / state.timeout);
+      const instantAvailability = acceptedFraction * timely;
+      state.availability += (instantAvailability - state.availability) * 0.08;
+      state.response += (response - state.response) * 0.13;
+
+      const rejectedRequestRate = (state.legit + mit.admitted) * (1 - acceptedFraction);
+      state.droppedRate += (rejectedRequestRate - state.droppedRate) * 0.15;
+      state.load = incomingWorkRate / cap;
+    }
+
+    // Canvases
+    const scene = $('scene');
+    const sctx = scene.getContext('2d');
+    const chart = $('chart');
+    const cctx = chart.getContext('2d');
+    let sceneW = 0, sceneH = 0, chartW = 0, chartH = 0;
+    const packets = [];
+    let packetAcc = 0;
+
+    function resizeCanvas(canvas, context, cssHeight) {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      canvas.width = Math.max(1, rect.width * dpr);
+      canvas.height = cssHeight * dpr;
+      context.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return { w: rect.width, h: cssHeight };
+    }
+    function refit() {
+      ({ w: sceneW, h: sceneH } = resizeCanvas(scene, sctx, window.innerWidth < 600 ? 290 : 350));
+      ({ w: chartW, h: chartH } = resizeCanvas(chart, cctx, 240));
+    }
+    window.addEventListener('resize', refit);
+
+    function roundedRect(ctx, x, y, w, h, r) {
+      const rr = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + rr, y);
+      ctx.arcTo(x + w, y, x + w, y + h, rr);
+      ctx.arcTo(x + w, y + h, x, y + h, rr);
+      ctx.arcTo(x, y + h, x, y, rr);
+      ctx.arcTo(x, y, x + w, y, rr);
+      ctx.closePath();
+    }
+    function label(ctx, text, x, y, color, size = 11, align = 'left', weight = 700) {
+      ctx.fillStyle = color;
+      ctx.font = `${weight} ${size}px ${getComputedStyle(document.body).fontFamily}`;
+      ctx.textAlign = align;
+      ctx.fillText(text, x, y);
+    }
+    function drawComputer(ctx, x, y, color) {
+      ctx.strokeStyle = color; ctx.lineWidth = 2;
+      roundedRect(ctx, x - 12, y - 9, 24, 16, 3); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x, y + 7); ctx.lineTo(x, y + 12); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x - 7, y + 12); ctx.lineTo(x + 7, y + 12); ctx.stroke();
+    }
+
+    function visibleAttackRate() { return mitigationResult().admitted; }
+    function originYs() {
+      if (state.mode === 'dos') return [sceneH * .68];
+      const n = Math.min(9, state.origins);
+      return Array.from({ length: n }, (_, i) => sceneH * .44 + ((i + .5) / n) * sceneH * .46);
+    }
+    function spawnPackets(dt, ys) {
+      packetAcc += dt;
+      const mit = mitigationResult();
+      const totalVisible = state.legit + Math.min(state.attack, 420);
+      const density = clamp(totalVisible / 260, 0, 1);
+      const interval = .28 - density * .235;
+      if (packetAcc < interval) return;
+      packetAcc = 0;
+      const total = state.legit + state.attack;
+      const legit = Math.random() < (total > 0 ? state.legit / total : 1);
+      const blockedChance = !legit && state.attack > 0 ? mit.blocked / state.attack : 0;
+      packets.push({
+        x: 30,
+        y: legit ? sceneH * .28 : ys[(Math.random() * ys.length) | 0],
+        legit,
+        blocked: !legit && Math.random() < blockedChance,
+        speed: 155 + Math.random() * 80,
+        age: 0
+      });
+      if (packets.length > 110) packets.splice(0, packets.length - 110);
+    }
+
+    function drawScene(dt) {
+      const W = sceneW, H = sceneH;
+      sctx.clearRect(0, 0, W, H);
+      if (!W) return;
+
+      const ys = originYs();
+      if (state.running) spawnPackets(dt, ys);
+
+      const filterX = W * .40;
+      const queueX = W * .52;
+      const serverX = W * .67;
+      const appX = W * .88;
+      const centerY = H * .52;
+      const qPct = clamp(state.queueWork / state.buffer, 0, 1);
+
+      // zone labels
+      label(sctx, 'ORIGEM', 24, 25, css('--muted'), 10);
+      label(sctx, 'PERÍMETRO', filterX - 35, 25, css('--muted'), 10, 'center');
+      label(sctx, 'PROCESSAMENTO', serverX, 25, css('--muted'), 10, 'center');
+
+      // paths
+      sctx.strokeStyle = css('--line'); sctx.lineWidth = 1.2; sctx.globalAlpha = .75;
+      sctx.beginPath(); sctx.moveTo(55, H * .28); sctx.lineTo(queueX, centerY); sctx.stroke();
+      ys.forEach(y => { sctx.beginPath(); sctx.moveTo(55, y); sctx.lineTo(queueX, centerY); sctx.stroke(); });
+      sctx.globalAlpha = 1;
+
+      // sources
+      drawComputer(sctx, 50, H * .28, css('--good'));
+      label(sctx, 'Utilizadores', 73, H * .28 + 4, css('--good'), 11);
+      ys.forEach(y => drawComputer(sctx, 50, y, css('--bad')));
+      label(sctx, state.mode === 'dos' ? 'Atacante' : `Botnet · ${state.origins}`, 73, ys[0] + 4, css('--bad'), 11);
+
+      // filter / defense
+      const defenseActive = state.mitigation !== 'none';
+      sctx.save();
+      sctx.strokeStyle = defenseActive ? css('--teal') : css('--line');
+      sctx.lineWidth = defenseActive ? 3 : 1.5;
+      sctx.setLineDash(defenseActive ? [7, 5] : [4, 5]);
+      sctx.beginPath(); sctx.moveTo(filterX, 65); sctx.lineTo(filterX, H - 45); sctx.stroke();
+      sctx.restore();
+      roundedRect(sctx, filterX - 45, 37, 90, 24, 9);
+      sctx.fillStyle = defenseActive ? css('--teal-soft') : css('--panel-2'); sctx.fill();
+      label(sctx, state.mitigation === 'none' ? 'SEM FILTRO' : state.mitigation === 'rate' ? 'RATE LIMIT' : 'WAF + BOTS', filterX, 53, defenseActive ? css('--teal') : css('--muted'), 9, 'center', 800);
+
+      // queue
+      const qH = 150, qW = 27, qY = centerY - qH / 2;
+      sctx.fillStyle = css('--panel-2'); sctx.strokeStyle = css('--line'); sctx.lineWidth = 1.2;
+      roundedRect(sctx, queueX - qW / 2, qY, qW, qH, 7); sctx.fill(); sctx.stroke();
+      const qColor = qPct < .55 ? css('--good') : qPct < .88 ? css('--warn') : css('--bad');
+      if (qPct > 0) {
+        const fillH = Math.max(4, qH * qPct);
+        sctx.fillStyle = qColor;
+        roundedRect(sctx, queueX - qW / 2 + 3, qY + qH - fillH + 3, qW - 6, Math.max(1, fillH - 6), 5); sctx.fill();
+      }
+      label(sctx, 'FILA', queueX, qY - 10, css('--muted'), 10, 'center');
+
+      // server
+      const sw = 112, sh = 140;
+      sctx.fillStyle = css('--ink');
+      roundedRect(sctx, serverX - sw / 2, centerY - sh / 2, sw, sh, 16); sctx.fill();
+      sctx.fillStyle = css('--bg');
+      label(sctx, 'SERVIDOR', serverX, centerY - 18, css('--bg'), 12, 'center', 800);
+      label(sctx, 'WEB', serverX, centerY + 1, css('--bg'), 12, 'center', 800);
+      const load = clamp(state.load, 0, 1);
+      const actualLoadPct = Math.round(clamp(state.load * 100, 0, 999));
+      const barW = 70;
+      sctx.fillStyle = colorMix(css('--bg'), css('--ink'), .7);
+      roundedRect(sctx, serverX - barW / 2, centerY + 25, barW, 9, 5); sctx.fill();
+      sctx.fillStyle = load < .8 ? css('--good') : load < 1 ? css('--warn') : css('--bad');
+      roundedRect(sctx, serverX - barW / 2, centerY + 25, barW * clamp(load, 0, 1), 9, 5); sctx.fill();
+      label(sctx, `${actualLoadPct}% carga`, serverX, centerY + 52, css('--bg'), 9, 'center', 700);
+
+      // app + database
+      sctx.strokeStyle = css('--line'); sctx.lineWidth = 2;
+      roundedRect(sctx, appX - 56, centerY - 52, 112, 104, 14); sctx.stroke();
+      label(sctx, 'APLICAÇÃO', appX, centerY - 11, css('--muted'), 10, 'center', 800);
+      label(sctx, '+ BASE DE DADOS', appX, centerY + 10, css('--muted'), 9, 'center', 700);
+      sctx.beginPath(); sctx.moveTo(serverX + sw / 2, centerY); sctx.lineTo(appX - 56, centerY); sctx.stroke();
+
+      // packets
+      for (let i = packets.length - 1; i >= 0; i--) {
+        const p = packets[i];
+        if (state.running) { p.age += dt; p.x += p.speed * dt; }
+        const targetY = centerY;
+        p.y += (targetY - p.y) * Math.min(1, dt * 2.4);
+        const targetX = p.blocked ? filterX - 9 : queueX;
+        const col = p.legit ? css('--good') : css('--bad');
+        sctx.fillStyle = col;
+        sctx.globalAlpha = p.blocked && p.x >= targetX ? clamp(1 - (p.age - .35) * 2.5, 0, 1) : 1;
+        sctx.beginPath(); sctx.arc(Math.min(p.x, targetX), p.y, p.legit ? 4 : 3.4, 0, Math.PI * 2); sctx.fill();
+        sctx.globalAlpha = 1;
+        if (p.blocked && p.x >= targetX && p.age > .75) packets.splice(i, 1);
+        else if (!p.blocked && p.x >= queueX) packets.splice(i, 1);
+      }
+
+      // bottom annotation
+      const mit = mitigationResult();
+      label(sctx, `Entrada: ${fmt(state.legit + state.attack)} pedidos/s`, 24, H - 18, css('--muted'), 10);
+      label(sctx, `Admitidos: ${fmt(state.legit + mit.admitted)} pedidos/s`, W / 2, H - 18, css('--muted'), 10, 'center');
+      label(sctx, `Capacidade efetiva: ${fmt(effectiveCapacity())} u/s`, W - 24, H - 18, css('--muted'), 10, 'right');
+    }
+
+    function colorMix(a, b, t) {
+      // Safe fallback for canvas fill; returns first colour because CSS variables can be complex.
+      return a || b;
+    }
+
+    function drawChart() {
+      const W = chartW, H = chartH;
+      cctx.clearRect(0, 0, W, H);
+      if (!W) return;
+      const left = 40, right = 10, top = 12, bottom = 25;
+      const pw = W - left - right, ph = H - top - bottom;
+      const maxSec = 4;
+
+      cctx.strokeStyle = css('--line'); cctx.lineWidth = 1;
+      for (let i = 0; i <= 4; i++) {
+        const y = top + ph * (i / 4);
+        cctx.globalAlpha = i === 4 ? 1 : .55;
+        cctx.beginPath(); cctx.moveTo(left, y); cctx.lineTo(W - right, y); cctx.stroke();
+      }
+      cctx.globalAlpha = 1;
+      const timeoutY = top + ph * (1 - state.timeout / maxSec);
+      cctx.strokeStyle = css('--bad'); cctx.setLineDash([6, 5]);
+      cctx.beginPath(); cctx.moveTo(left, timeoutY); cctx.lineTo(W - right, timeoutY); cctx.stroke();
+      cctx.setLineDash([]);
+      label(cctx, '2 s', left - 7, timeoutY + 4, css('--bad'), 10, 'right');
+      label(cctx, '0', left - 7, top + ph + 4, css('--muted'), 10, 'right');
+      label(cctx, '4 s', left - 7, top + 4, css('--muted'), 10, 'right');
+
+      const h = state.history;
+      if (h.length > 1) {
+        // Queue area
+        cctx.beginPath();
+        h.forEach((d, i) => {
+          const x = left + (i / (h.length - 1)) * pw;
+          const y = top + ph * (1 - d.queue);
+          i ? cctx.lineTo(x, y) : cctx.moveTo(x, y);
+        });
+        cctx.strokeStyle = css('--violet'); cctx.lineWidth = 2; cctx.stroke();
+
+        // Response line
+        cctx.beginPath();
+        h.forEach((d, i) => {
+          const x = left + (i / (h.length - 1)) * pw;
+          const y = top + ph * (1 - clamp(d.response / maxSec, 0, 1));
+          i ? cctx.lineTo(x, y) : cctx.moveTo(x, y);
+        });
+        cctx.strokeStyle = css('--good'); cctx.lineWidth = 2.6; cctx.lineJoin = 'round'; cctx.stroke();
+      }
+      label(cctx, 'há 20 s', left, H - 6, css('--muted'), 9);
+      label(cctx, 'agora', W - right, H - 6, css('--muted'), 9, 'right');
+    }
+
+    function metricState(el, kind) {
+      el.classList.remove('good', 'warn', 'bad');
+      el.classList.add(kind);
+    }
+
+    function updateInsight(wait, loadPct, availPct, blockedPct) {
+      const box = $('insight');
+      let title, text, color;
+      if (state.attack === 0 && loadPct < 95) {
+        title = state.scenario === 'legitPeak' ? 'Pico legítimo, não necessariamente um ataque' : 'Funcionamento normal';
+        text = state.scenario === 'legitPeak'
+          ? 'O tráfego aumentou, mas não existe atacante. É por isso que a deteção não pode depender apenas do volume.'
+          : 'Os pedidos chegam abaixo da capacidade disponível. A fila mantém-se curta e a aplicação responde rapidamente.';
+        color = 'var(--good)';
+      } else if (loadPct < 100 && availPct > 90) {
+        title = 'Ataque absorvido';
+        text = blockedPct > 0 ? 'As defesas estão a bloquear uma parte suficiente do ataque e o serviço continua disponível.' : 'Existe tráfego malicioso, mas a capacidade ainda é suficiente para o processar.';
+        color = 'var(--teal)';
+      } else if (wait < state.timeout && availPct > 50) {
+        title = 'Degradação em curso';
+        text = 'A entrada ultrapassa a capacidade. A fila cresce e os utilizadores legítimos começam a esperar mais.';
+        color = 'var(--warn)';
+      } else {
+        title = 'Indisponibilidade para utilizadores legítimos';
+        text = 'A fila ultrapassou o tempo tolerado. O servidor continua ocupado, mas uma parte dos pedidos legítimos já falha por timeout.';
+        color = 'var(--bad)';
+      }
+      box.style.borderLeftColor = color;
+      box.querySelector('strong').textContent = title;
+      box.querySelector('span').textContent = text;
+    }
+
+    function render(dt) {
+      const qPct = clamp(state.queueWork / state.buffer, 0, 1);
+      const loadPct = Math.round(clamp(state.load * 100, 0, 999));
+      const availPct = Math.round(clamp(state.availability * 100, 0, 100));
+      const blockedPct = Math.round(clamp(state.blockedRate * 100, 0, 100));
+      const wait = state.response;
+
+      $('loadVal').textContent = fmt(loadPct);
+      $('queueVal').textContent = fmt(Math.round(qPct * 100));
+      $('responseVal').textContent = fmt(wait, 2);
+      $('availabilityVal').textContent = fmt(availPct);
+      $('blockedVal').textContent = fmt(blockedPct);
+      $('droppedVal').textContent = fmt(Math.round(state.droppedRate));
+
+      metricState($('metricLoad'), loadPct < 80 ? 'good' : loadPct < 100 ? 'warn' : 'bad');
+      metricState($('metricQueue'), qPct < .5 ? 'good' : qPct < .88 ? 'warn' : 'bad');
+      metricState($('metricResponse'), wait < 1 ? 'good' : wait < state.timeout ? 'warn' : 'bad');
+      metricState($('metricAvailability'), availPct > 90 ? 'good' : availPct > 50 ? 'warn' : 'bad');
+      metricState($('metricBlocked'), state.attack === 0 || blockedPct > 70 ? 'good' : blockedPct > 25 ? 'warn' : 'bad');
+      metricState($('metricDropped'), state.droppedRate < 1 ? 'good' : state.droppedRate < 30 ? 'warn' : 'bad');
+
+      const st = $('status');
+      if (wait < 1 && availPct > 90) { st.className = 'status ok'; $('statusText').textContent = 'Serviço disponível'; }
+      else if (wait < state.timeout && availPct > 50) { st.className = 'status warn'; $('statusText').textContent = 'Serviço degradado'; }
+      else { st.className = 'status crit'; $('statusText').textContent = 'Pedidos legítimos a falhar'; }
+
+      updateInsight(wait, loadPct, availPct, blockedPct);
+      drawScene(dt);
+      drawChart();
+    }
+
+    function frame(now) {
+      const dt = Math.min(.25, (now - lastTime) / 1000);
+      lastTime = now;
+      if (state.running) {
+        accumulator += dt;
+        sampleAccumulator += dt;
+        while (accumulator >= STEP) { tick(STEP); accumulator -= STEP; }
+        if (sampleAccumulator >= .5) {
+          state.history.push({ response: state.response, queue: clamp(state.queueWork / state.buffer, 0, 1) });
+          if (state.history.length > 40) state.history.shift();
+          sampleAccumulator = 0;
+        }
+      }
+      render(dt);
+      requestAnimationFrame(frame);
+    }
+
+    // Automatic presentation demo
+    const autoSteps = [
+      { scenario: 'normal', seconds: 6, title: '1. Funcionamento normal', text: 'O tráfego legítimo permanece abaixo da capacidade. A fila está vazia e o serviço responde rapidamente.' },
+      { scenario: 'legitPeak', seconds: 7, title: '2. Pico legítimo', text: 'O volume aumenta sem existir um ataque. Isto demonstra por que razão o volume, isoladamente, não prova intenção maliciosa.' },
+      { scenario: 'ddos', seconds: 10, title: '3. HTTP Flooding distribuído', text: 'Muitas origens repartem o tráfego. O rate limiting simples deixa passar demasiado, a fila cresce e os utilizadores legítimos começam a falhar.' },
+      { scenario: 'defended', seconds: 10, title: '4. Defesa em profundidade', text: 'WAF, gestão de bots e cache/CDN reduzem o tráfego admitido e aumentam a capacidade efetiva. O serviço recupera progressivamente.' }
+    ];
+    let autoTimer = null, autoIndex = 0, autoStarted = 0, autoDuration = 0;
+
+    function stopAuto() {
+      state.auto = false;
+      clearInterval(autoTimer);
+      autoTimer = null;
+      $('autoBanner').classList.remove('show');
+      $('autoDemo').textContent = '▶ Demonstração automática';
+    }
+    function runAutoStep() {
+      const step = autoSteps[autoIndex];
+      setScenario(step.scenario, false);
+      state.running = true;
+      syncControls();
+      $('autoTitle').textContent = step.title;
+      $('autoText').textContent = step.text;
+      autoStarted = performance.now();
+      autoDuration = step.seconds * 1000;
+    }
+    function startAuto() {
+      if (state.auto) { stopAuto(); return; }
+      state.auto = true;
+      autoIndex = 0;
+      $('autoBanner').classList.add('show');
+      $('autoDemo').textContent = '■ Parar demonstração';
+      runAutoStep();
+      autoTimer = setInterval(() => {
+        const elapsed = performance.now() - autoStarted;
+        $('autoProgress').style.width = `${clamp(elapsed / autoDuration * 100, 0, 100)}%`;
+        if (elapsed >= autoDuration) {
+          autoIndex++;
+          if (autoIndex >= autoSteps.length) { stopAuto(); return; }
+          runAutoStep();
+        }
+      }, 80);
+    }
+    $('autoDemo').addEventListener('click', startAuto);
+    $('autoStop').addEventListener('click', stopAuto);
+
+    refit();
+    setScenario('normal', false);
+    syncControls();
+    requestAnimationFrame(frame);
+  })();
+  </script>
+</body>
 </html>
